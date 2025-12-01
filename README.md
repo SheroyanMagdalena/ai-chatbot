@@ -1,73 +1,81 @@
-# React + TypeScript + Vite
+### n8n + RAG: Building a Smart Chatbot for Hartak.am
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Retrieval-Augmented Generation (RAG) combined with **n8n** provides a powerful yet simple way to build an intelligent chatbot that can understand user questions, search through real content, and generate accurate, grounded answers.
 
-Currently, two official plugins are available:
+This project uses **n8n**, **Supabase Vector Store**, **Apify Crawler**, and **OpenAI/Cohere embeddings** to create a fully automated pipeline for crawling hartak.am, indexing knowledge, and answering user queries reliably.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## Why Use n8n?
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+n8n is a low-code automation tool that allows you to connect every component of the RAG pipeline **without writing complex backend code**.
 
-## Expanding the ESLint configuration
+With n8n, you can visually orchestrate:
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- Fetching website content (via Apify or HTTP nodes)
+- Cleaning and preparing text
+- Splitting content into chunks
+- Generating embeddings with OpenAI or Cohere
+- Storing vectors inside Supabase
+- Retrieving relevant context dynamically
+- Generating AI answers via GPT-4, Cohere Command R, etc.
+- Delivering responses through chat widgets, Telegram, Slack, or any interface
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+Instead of building APIs, databases, and cron jobs manually, everything is handled through reusable workflow blocks inside n8n.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+---
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## 🔄 How the Workflow Works
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+This RAG pipeline follows a clean and modular structure:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### **1. Ingestion**
+- Crawl and download the latest content from hartak.am using Apify.
+- Extract raw HTML → clean it → convert to plain text.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+### **2. Preprocessing**
+- Split text into chunks (e.g., 500–1200 characters).
+- Attach metadata such as URL, title, or timestamp.
+
+### **3. Embedding**
+- Convert text chunks into embeddings using:
+  - OpenAI Embeddings
+  - or Cohere Embeddings
+
+### **4. Indexing**
+- Store embeddings + documents inside **Supabase Vector Store**.
+
+### **5. Querying**
+When a user sends a question through your AI chat widget:
+- Create an embedding of the question
+- Retrieve the top-N similar chunks from Supabase
+- Pass these chunks to the LLM as context
+
+### **6. Answer Generation**
+Using OpenAI or Cohere, the model generates:
+- A grounded answer  
+- Based strictly on retrieved documents  
+- With minimal hallucinations  
+- In Armenian (or any supported language)
+
+The chatbot responds instantly through the frontend widget.
+
+---
+
+## Workflow Overview
+
+Below is the complete workflow diagram used in this project:
+
+![RAG Workflow]()
+
+---
+
+## Features
+
+✔ Fully automated daily crawling  
+✔ Smart text cleanup and formatting  
+✔ High-quality embeddings  
+✔ Fast vector search  
+✔ Robust LLM-based answering  
+✔ Language support for Armenian  
+✔ Easy to scale and maintain  
