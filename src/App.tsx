@@ -12,7 +12,7 @@ const App: React.FC = () => {
       import Chatbot from "https://cdn.n8nchatui.com/v1/embed.js";
 
       Chatbot.init({
-        "n8nChatUrl": "https://maga864.app.n8n.cloud/webhook/29a8fead-5a90-403d-b164-d9e2d33898d9/chat",
+        "n8nChatUrl": "https://sampleee12.app.n8n.cloud/webhook/29a8fead-5a90-403d-b164-d9e2d33898d9/chat",
         "metadata": {},
         "theme": {
           "button": {
