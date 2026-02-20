@@ -41,7 +41,7 @@ const App: React.FC = () => {
             <div className="eyebrow">Այստեղ կգտնես</div>
 
             <h1 id="hero-title" className="hero-title">
-              <span>Ծaրայություններ</span>
+              <span>Ծարայություններ</span>
               <span>և տեղեկատվություն</span>
               <span>մեկ հարթակում</span>
             </h1>
@@ -51,9 +51,9 @@ const App: React.FC = () => {
                 <input
                   className="search-input"
                   type="text"
-                  placeholder="Որоnum"
+                  placeholder="Որոնում"
                 />
-                <button className="search-button" type="button" aria-label="Որоnел">
+                <button className="search-button" type="button" aria-label="Որոնում">
                   <span>🔍</span>
                 </button>
               </div>
