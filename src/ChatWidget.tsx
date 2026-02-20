@@ -16,6 +16,26 @@ const BOT_AVATAR = "https://hartak.am/_ipx/_/cms/6ec6cba0-6f09-427e-aade-28196cd
 const HEADER_AVATAR = "https://hartak.am/_ipx/_/cms/c61969de-ec42-41d6-92a5-5c080a2c67c0.svg";
 const USER_AVATAR = "https://www.svgrepo.com/show/532363/user-alt-1.svg";
 
+/**
+ * Produces a short human-readable label for a raw URL.
+ * e.g. "https://hartak.am/life-events/%D5%A1..." → "hartak.am › life-events"
+ */
+const prettifyUrl = (raw: string): string => {
+  try {
+    const url = new URL(raw);
+    const host = url.hostname.replace(/^www\./, "");
+    // Decode the pathname and take first meaningful segment(s)
+    const parts = decodeURIComponent(url.pathname)
+      .split("/")
+      .filter(Boolean);
+    if (parts.length === 0) return host;
+    // Show up to 2 path segments to keep it concise
+    return `${host} › ${parts.slice(0, 2).join(" › ")}`;
+  } catch {
+    return raw;
+  }
+};
+
 // Renders text with clickable links — handles [label](url) and raw https:// URLs
 const renderMessageContent = (text: string): React.ReactElement => {
   const tokenRegex = /(\[([^\]]+)\]\((https?:\/\/[^\s)]+)\))|(https?:\/\/[^\s]+)/g;
@@ -32,19 +52,20 @@ const renderMessageContent = (text: string): React.ReactElement => {
       );
     }
     if (match[1]) {
-      // Markdown [label](url)
+      // Markdown [label](url) — label is already human-readable
       result.push(
         <a key={`a-${match.index}`} href={match[3]} target="_blank" rel="noreferrer"
-          style={{ color: "#2A4A70", fontWeight: 600, wordBreak: "break-all", textDecoration: "underline" }}>
+          style={styles.link}>
           {match[2]}
         </a>
       );
     } else {
-      // Raw URL
+      // Raw URL — show a pretty label instead of the raw encoded string
+      const href = match[0];
       result.push(
-        <a key={`a-${match.index}`} href={match[0]} target="_blank" rel="noreferrer"
-          style={{ color: "#2A4A70", fontWeight: 600, wordBreak: "break-all", textDecoration: "underline" }}>
-          {match[0]}
+        <a key={`a-${match.index}`} href={href} target="_blank" rel="noreferrer"
+          style={styles.link}>
+          🔗 {prettifyUrl(href)}
         </a>
       );
     }
@@ -367,6 +388,20 @@ const styles: Record<string, React.CSSProperties> = {
     display: "flex", alignItems: "center", justifyContent: "center",
     boxShadow: "0 4px 20px rgba(42,74,112,0.4)", zIndex: 10000, transition: "transform 0.2s",
   },
+  // Link style — compact pill-style chip
+  link: {
+    display: "inline-block",
+    color: "#2A4A70",
+    fontWeight: 600,
+    fontSize: 13,
+    textDecoration: "none",
+    background: "rgba(42,74,112,0.08)",
+    borderRadius: 8,
+    padding: "2px 8px",
+    margin: "2px 0",
+    border: "1px solid rgba(42,74,112,0.18)",
+    wordBreak: "break-word",
+  } as React.CSSProperties,
 };
 
 const TypingIndicator = () => (
