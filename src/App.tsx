@@ -41,7 +41,7 @@ const App: React.FC = () => {
             <div className="eyebrow">Այստեղ կգտնես</div>
 
             <h1 id="hero-title" className="hero-title">
-              <span>Ծարայություններ</span>
+              <span>Ծառայություններ</span>
               <span>և տեղեկատվություն</span>
               <span>մեկ հարթակում</span>
             </h1>
