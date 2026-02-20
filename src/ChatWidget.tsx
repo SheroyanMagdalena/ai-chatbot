@@ -16,6 +16,52 @@ const BOT_AVATAR = "https://hartak.am/_ipx/_/cms/6ec6cba0-6f09-427e-aade-28196cd
 const HEADER_AVATAR = "https://hartak.am/_ipx/_/cms/c61969de-ec42-41d6-92a5-5c080a2c67c0.svg";
 const USER_AVATAR = "https://www.svgrepo.com/show/532363/user-alt-1.svg";
 
+// Renders text with clickable links — handles [label](url) and raw https:// URLs
+const renderMessageContent = (text: string): JSX.Element => {
+  const tokenRegex = /(\[([^\]]+)\]\((https?:\/\/[^\s)]+)\))|(https?:\/\/[^\s]+)/g;
+  const result: JSX.Element[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = tokenRegex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      result.push(
+        <span key={`t-${lastIndex}`} style={{ whiteSpace: "pre-wrap" }}>
+          {text.slice(lastIndex, match.index)}
+        </span>
+      );
+    }
+    if (match[1]) {
+      // Markdown [label](url)
+      result.push(
+        <a key={`a-${match.index}`} href={match[3]} target="_blank" rel="noreferrer"
+          style={{ color: "#2A4A70", fontWeight: 600, wordBreak: "break-all", textDecoration: "underline" }}>
+          {match[2]}
+        </a>
+      );
+    } else {
+      // Raw URL
+      result.push(
+        <a key={`a-${match.index}`} href={match[0]} target="_blank" rel="noreferrer"
+          style={{ color: "#2A4A70", fontWeight: 600, wordBreak: "break-all", textDecoration: "underline" }}>
+          {match[0]}
+        </a>
+      );
+    }
+    lastIndex = match.index + match[0].length;
+  }
+
+  if (lastIndex < text.length) {
+    result.push(
+      <span key={`t-${lastIndex}`} style={{ whiteSpace: "pre-wrap" }}>
+        {text.slice(lastIndex)}
+      </span>
+    );
+  }
+
+  return <>{result}</>;
+};
+
 const ChatWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(true);
   const [messages, setMessages] = useState<Message[]>([
@@ -55,6 +101,7 @@ const ChatWidget: React.FC = () => {
         body: JSON.stringify({
           chatInput: text.trim(),
           sessionId,
+          action: "sendMessage",
         }),
       });
 
@@ -93,7 +140,6 @@ const ChatWidget: React.FC = () => {
 
   return (
     <>
-      {/* Chat Window */}
       {isOpen && (
         <div style={styles.window}>
           {/* Header */}
@@ -101,7 +147,13 @@ const ChatWidget: React.FC = () => {
             <img src={HEADER_AVATAR} alt="logo" style={styles.headerAvatar} />
             <span style={styles.headerTitle}>Ծառայությունների միասնական հարթակ</span>
             <div style={styles.headerActions}>
-              <button style={styles.iconBtn} title="Refresh" onClick={() => setMessages([{ id: "welcome", role: "bot", content: "Ողջույն 👋  Ինչո՞վ կարող եմ օգնել" }])}>
+              <button
+                style={styles.iconBtn}
+                title="Refresh"
+                onClick={() =>
+                  setMessages([{ id: "welcome", role: "bot", content: "Ողջույն 👋  Ինչո՞վ կարող եմ օգնել" }])
+                }
+              >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
                   <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
@@ -118,14 +170,25 @@ const ChatWidget: React.FC = () => {
           {/* Messages */}
           <div style={styles.messages}>
             {messages.map((msg) => (
-              <div key={msg.id} style={{ display: "flex", alignItems: "flex-end", gap: 8, flexDirection: msg.role === "user" ? "row-reverse" : "row", marginBottom: 12 }}>
+              <div
+                key={msg.id}
+                style={{
+                  display: "flex",
+                  alignItems: "flex-end",
+                  gap: 8,
+                  flexDirection: msg.role === "user" ? "row-reverse" : "row",
+                  marginBottom: 12,
+                }}
+              >
                 <img
                   src={msg.role === "bot" ? BOT_AVATAR : USER_AVATAR}
                   alt="avatar"
                   style={msg.role === "bot" ? styles.botAvatarImg : styles.userAvatarImg}
                 />
                 <div style={msg.role === "bot" ? styles.botBubble : styles.userBubble}>
-                  <span style={{ whiteSpace: "pre-wrap", lineHeight: 1.5 }}>{msg.content}</span>
+                  <span style={{ lineHeight: 1.6, fontSize: 14 }}>
+                    {msg.role === "bot" ? renderMessageContent(msg.content) : msg.content}
+                  </span>
                 </div>
               </div>
             ))}
@@ -139,7 +202,6 @@ const ChatWidget: React.FC = () => {
               </div>
             )}
 
-            {/* Starter prompts — show only at start */}
             {messages.length === 1 && !isLoading && (
               <div style={styles.starters}>
                 {STARTER_PROMPTS.map((p, i) => (
@@ -198,7 +260,7 @@ const ChatWidget: React.FC = () => {
         </div>
       )}
 
-      {/* Toggle Button */}
+      {/* FAB Toggle */}
       <button style={styles.fab} onClick={() => setIsOpen((o) => !o)}>
         {isOpen ? (
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -250,170 +312,63 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: "center",
     gap: 10,
   },
-  headerAvatar: {
-    width: 34,
-    height: 34,
-    borderRadius: "50%",
-    objectFit: "cover",
-  },
-  headerTitle: {
-    flex: 1,
-    fontWeight: 600,
-    fontSize: 14,
-    color: "#1a1a1a",
-  },
-  headerActions: {
-    display: "flex",
-    gap: 6,
-  },
+  headerAvatar: { width: 34, height: 34, borderRadius: "50%", objectFit: "cover" },
+  headerTitle: { flex: 1, fontWeight: 600, fontSize: 14, color: "#1a1a1a" },
+  headerActions: { display: "flex", gap: 6 },
   iconBtn: {
-    background: "none",
-    border: "none",
-    cursor: "pointer",
-    color: "#555",
-    padding: 4,
-    borderRadius: 6,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
+    background: "none", border: "none", cursor: "pointer", color: "#555",
+    padding: 4, borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center",
   },
   messages: {
-    flex: 1,
-    overflowY: "auto",
-    padding: "16px 14px",
-    display: "flex",
-    flexDirection: "column",
+    flex: 1, overflowY: "auto", padding: "16px 14px", display: "flex", flexDirection: "column",
   },
   botAvatarImg: {
-    width: 34,
-    height: 34,
-    borderRadius: "50%",
-    objectFit: "cover",
-    flexShrink: 0,
-    background: "#2A4A70",
-    padding: 2,
+    width: 34, height: 34, borderRadius: "50%", objectFit: "cover",
+    flexShrink: 0, background: "#2A4A70", padding: 2,
   },
   userAvatarImg: {
-    width: 34,
-    height: 34,
-    borderRadius: "50%",
-    objectFit: "cover",
-    flexShrink: 0,
-    background: "#B8C6D8",
-    padding: 4,
+    width: 34, height: 34, borderRadius: "50%", objectFit: "cover",
+    flexShrink: 0, background: "#B8C6D8", padding: 4,
   },
   botBubble: {
-    background: "#DCDCDC",
-    color: "#000",
-    borderRadius: "18px 18px 18px 4px",
-    padding: "10px 14px",
-    fontSize: 14,
-    maxWidth: "78%",
+    background: "#DCDCDC", color: "#000",
+    borderRadius: "18px 18px 18px 4px", padding: "10px 14px", fontSize: 14, maxWidth: "78%",
   },
   userBubble: {
-    background: "#B8C6D8",
-    color: "#050505",
-    borderRadius: "18px 18px 4px 18px",
-    padding: "10px 14px",
-    fontSize: 14,
-    maxWidth: "78%",
+    background: "#B8C6D8", color: "#050505",
+    borderRadius: "18px 18px 4px 18px", padding: "10px 14px", fontSize: 14, maxWidth: "78%",
   },
-  typing: {
-    display: "flex",
-    alignItems: "center",
-    height: 20,
-  },
-  starters: {
-    display: "flex",
-    flexDirection: "column",
-    gap: 8,
-    marginTop: 8,
-  },
+  starters: { display: "flex", flexDirection: "column", gap: 8, marginTop: 8 },
   starterBtn: {
-    background: "#fff",
-    border: "1px solid #ddd",
-    borderRadius: 12,
-    padding: "9px 14px",
-    fontSize: 13,
-    color: "#2A4A70",
-    cursor: "pointer",
-    textAlign: "left",
-    transition: "background 0.15s",
+    background: "#fff", border: "1px solid #ddd", borderRadius: 12,
+    padding: "9px 14px", fontSize: 13, color: "#2A4A70", cursor: "pointer",
+    textAlign: "left", transition: "background 0.15s",
   },
-  inputArea: {
-    borderTop: "1px solid #eee",
-    padding: "10px 12px 8px",
-    background: "#fff",
-  },
+  inputArea: { borderTop: "1px solid #eee", padding: "10px 12px 8px", background: "#fff" },
   inputBox: {
-    display: "flex",
-    alignItems: "center",
-    border: "1px solid #ddd",
-    borderRadius: 10,
-    padding: "6px 8px",
-    gap: 6,
-    background: "#fff",
+    display: "flex", alignItems: "center", border: "1px solid #ddd",
+    borderRadius: 10, padding: "6px 8px", gap: 6, background: "#fff",
   },
   textarea: {
-    flex: 1,
-    border: "none",
-    outline: "none",
-    resize: "none",
-    fontSize: 14,
-    color: "#1e1e1f",
-    background: "transparent",
-    fontFamily: "inherit",
-    lineHeight: 1.5,
-    maxHeight: 80,
-    overflowY: "auto",
+    flex: 1, border: "none", outline: "none", resize: "none", fontSize: 14,
+    color: "#1e1e1f", background: "transparent", fontFamily: "inherit",
+    lineHeight: 1.5, maxHeight: 80, overflowY: "auto",
   },
-  attachBtn: {
-    background: "none",
-    border: "none",
-    cursor: "pointer",
-    padding: 4,
-    display: "flex",
-    alignItems: "center",
-  },
+  attachBtn: { background: "none", border: "none", cursor: "pointer", padding: 4, display: "flex", alignItems: "center" },
   sendBtn: {
-    background: "#2A4A70",
-    border: "none",
-    borderRadius: "50%",
-    width: 36,
-    height: 36,
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    flexShrink: 0,
-    transition: "opacity 0.2s",
+    background: "#2A4A70", border: "none", borderRadius: "50%", width: 36, height: 36,
+    cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+    flexShrink: 0, transition: "opacity 0.2s",
   },
-  footer: {
-    textAlign: "center",
-    fontSize: 11,
-    color: "#aaa",
-    margin: "6px 0 0",
-  },
+  footer: { textAlign: "center", fontSize: 11, color: "#aaa", margin: "6px 0 0" },
   fab: {
-    position: "fixed",
-    bottom: 20,
-    right: 20,
-    width: 64,
-    height: 64,
-    borderRadius: "50%",
-    background: "#2A4A70",
-    border: "none",
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    boxShadow: "0 4px 20px rgba(42,74,112,0.4)",
-    zIndex: 10000,
-    transition: "transform 0.2s",
+    position: "fixed", bottom: 20, right: 20, width: 64, height: 64,
+    borderRadius: "50%", background: "#2A4A70", border: "none", cursor: "pointer",
+    display: "flex", alignItems: "center", justifyContent: "center",
+    boxShadow: "0 4px 20px rgba(42,74,112,0.4)", zIndex: 10000, transition: "transform 0.2s",
   },
 };
 
-// Typing dots rendered via className
 const TypingIndicator = () => (
   <span style={{ display: "flex", alignItems: "center" }}>
     <span className="typing-dot" />
