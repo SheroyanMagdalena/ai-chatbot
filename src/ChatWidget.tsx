@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, type JSX } from "react";
 
 interface Message {
   id: string;
@@ -17,7 +17,7 @@ const HEADER_AVATAR = "https://hartak.am/_ipx/_/cms/c61969de-ec42-41d6-92a5-5c08
 const USER_AVATAR = "https://www.svgrepo.com/show/532363/user-alt-1.svg";
 
 // Renders text with clickable links — handles [label](url) and raw https:// URLs
-const renderMessageContent = (text: string): JSX.Element => {
+const renderMessageContent = (text: string): React.ReactElement => {
   const tokenRegex = /(\[([^\]]+)\]\((https?:\/\/[^\s)]+)\))|(https?:\/\/[^\s]+)/g;
   const result: JSX.Element[] = [];
   let lastIndex = 0;
