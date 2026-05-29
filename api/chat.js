@@ -6,7 +6,7 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const response = await fetch(
-    'https://maga123456789.app.n8n.cloud/webhook/29a8fead-5a90-403d-b164-d9e2d33898d9/chat',
+    'https://magamagdalena123456789.app.n8n.cloud/webhook/29a8fead-5a90-403d-b164-d9e2d33898d9/chat',
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
